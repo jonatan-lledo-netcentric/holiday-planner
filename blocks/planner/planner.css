@@ -1,0 +1,263 @@
+.planner .planner-wrapper {
+	border: 1px solid #dadde1;
+	border-radius: 12px;
+	padding: 16px;
+}
+
+.planner .planner-form {
+	display: grid;
+	gap: 10px;
+	margin-bottom: 14px;
+}
+
+.planner .planner-form label {
+	font-weight: 600;
+}
+
+.planner .planner-form input {
+	border: 1px solid #a8afb8;
+	border-radius: 8px;
+	font: inherit;
+	padding: 9px 10px;
+}
+
+.planner .planner-form button,
+.planner .planner-clear {
+	background: #0a68ff;
+	border: 0;
+	border-radius: 999px;
+	color: #fff;
+	cursor: pointer;
+	font: inherit;
+	font-weight: 600;
+	padding: 10px 14px;
+	width: fit-content;
+}
+
+.planner .planner-feedback {
+	color: #4a5562;
+	font-size: 0.95rem;
+	margin: 0;
+	min-height: 1.3em;
+}
+
+.planner .planner-feedback.is-error {
+	color: #cc6f74;
+}
+
+.planner .planner-table {
+	border-collapse: collapse;
+	margin-bottom: 12px;
+	width: 100%;
+}
+
+.planner .planner-table th,
+.planner .planner-table td {
+	border: 1px solid #dadde1;
+	padding: 10px;
+	text-align: left;
+}
+
+.planner .planner-table th {
+	background: #f5f7fa;
+	font-weight: 600;
+}
+
+.planner .planner-table td {
+	background: #fff;
+}
+
+.planner .planner-periods-table {
+	border-collapse: collapse;
+	margin-bottom: 20px;
+	width: 100%;
+}
+
+.planner .planner-periods-table th,
+.planner .planner-periods-table td {
+	border: 1px solid #dadde1;
+	padding: 10px;
+	text-align: left;
+}
+
+.planner .planner-periods-table th {
+	background: #f5f7fa;
+	font-weight: 600;
+}
+
+.planner .planner-periods-table td {
+	background: #fff;
+}
+
+@media (width >= 600px) {
+	.planner .planner-form {
+		align-items: end;
+		grid-template-columns: 1fr auto;
+	}
+
+	.planner .planner-form label,
+	.planner .planner-feedback {
+		grid-column: 1 / -1;
+	}
+}
+
+/* Period picker */
+.planner .planner-period {
+	border-top: 1px solid #dadde1;
+	margin-top: 20px;
+	padding-top: 20px;
+}
+
+.planner .planner-period-title {
+	font-size: 1rem;
+	margin: 0 0 12px;
+}
+
+.planner .planner-period > label {
+	display: block;
+	font-weight: 600;
+	margin-bottom: 8px;
+}
+
+.planner .planner-period-controls {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 16px;
+}
+
+.planner .planner-period-controls input {
+	border: 1px solid #a8afb8;
+	border-radius: 8px;
+	flex: 1;
+	font: inherit;
+	min-width: 0;
+	padding: 9px 10px;
+}
+
+.planner .planner-add-period {
+	background: #0a68ff;
+	border: 0;
+	border-radius: 999px;
+	color: #fff;
+	cursor: pointer;
+	font: inherit;
+	font-weight: 600;
+	padding: 10px 14px;
+	white-space: nowrap;
+}
+
+/* Calendar */
+.planner .planner-calendar {
+	border: 1px solid #dadde1;
+	border-radius: 12px;
+	max-width: 280px;
+	padding: 10px;
+}
+
+.planner .planner-calendar-nav {
+	align-items: center;
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 12px;
+}
+
+.planner .planner-cal-label {
+	font-weight: 600;
+}
+
+.planner .planner-cal-prev,
+.planner .planner-cal-next {
+	background: none;
+	border: 0;
+	border-radius: 6px;
+	cursor: pointer;
+	font-size: 1.1rem;
+	line-height: 1;
+	padding: 2px 6px;
+}
+
+.planner .planner-cal-prev:hover,
+.planner .planner-cal-next:hover {
+	background: #f0f2f5;
+}
+
+.planner .planner-cal-grid {
+	display: grid;
+	gap: 2px 0;
+	grid-template-columns: repeat(7, 1fr);
+}
+
+.planner .planner-cal-head {
+	color: #6b7280;
+	font-size: 0.65rem;
+	font-weight: 600;
+	padding: 3px 0;
+	text-align: center;
+	text-transform: uppercase;
+}
+
+.planner .planner-cal-day {
+	aspect-ratio: 1;
+	background: none;
+	border: 0;
+	border-radius: 50%;
+	cursor: pointer;
+	font: inherit;
+	font-size: 0.75rem;
+	position: relative;
+	text-align: center;
+	width: 100%;
+	z-index: 0;
+}
+
+.planner .planner-cal-day:hover {
+	background: #f0f2f5;
+}
+
+.planner .planner-cal-day.is-today {
+	font-weight: 700;
+	text-decoration: underline;
+}
+
+.planner .planner-cal-day.is-bank-holiday {
+	border: 2px solid #f59e0b;
+	box-sizing: border-box;
+}
+
+.planner .planner-cal-day.is-weekend {
+	background: #f3f4f6;
+}
+
+.planner .planner-cal-day.in-range::after,
+.planner .planner-cal-day.is-preview::after {
+	background: rgb(55 65 81 / 20%);
+	bottom: 0;
+	content: '';
+	left: 0;
+	position: absolute;
+	right: 0;
+	top: 0;
+	z-index: -1;
+}
+
+.planner .planner-cal-day.is-start::after,
+.planner .planner-cal-day.is-end::after {
+	background: rgb(37 99 235 / 25%);
+	border-radius: 50%;
+	bottom: 0;
+	content: '';
+	left: 0;
+	position: absolute;
+	right: 0;
+	top: 0;
+	z-index: -1;
+}
+
+.planner .planner-cal-day.is-start,
+.planner .planner-cal-day.is-end {
+	border: 2px solid #2563eb;
+	box-sizing: border-box;
+	font-weight: 700;
+}
+
+

@@ -14,6 +14,7 @@ import {
 import {
   loadSections,
 } from '../../scripts/aem.js';
+import { createElement } from '../../scripts/common.js';
 
 /**
  * Loads a fragment.
@@ -24,7 +25,7 @@ export async function loadFragment(path) {
   if (path && path.startsWith('/') && !path.startsWith('//')) {
     const resp = await fetch(`${path}.plain.html`);
     if (resp.ok) {
-      const main = document.createElement('main');
+      const main = createElement('main');
       main.innerHTML = await resp.text();
 
       // reset base path for media to fragment base

@@ -1,6 +1,7 @@
 /* Boilerplate default block. */
 
 import { getMetadata } from '../../scripts/aem.js';
+import { createElement } from '../../scripts/common.js';
 import { loadFragment } from '../fragment/fragment.js';
 
 /**
@@ -15,7 +16,7 @@ export default async function decorate(block) {
 
   // decorate footer DOM
   block.textContent = '';
-  const footer = document.createElement('div');
+  const footer = createElement('div');
   while (fragment.firstElementChild) footer.append(fragment.firstElementChild);
 
   block.append(footer);
