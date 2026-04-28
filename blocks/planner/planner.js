@@ -11,20 +11,26 @@ function getMaxDays(value) {
   return days;
 }
 
-function renderTableBody(tbody, maxDays, periods = [], usedDays = 0) {
-  const maxDaysValue = maxDays ?? 0;
-  const plannedDaysValue = periods.reduce((sum, p) => sum + p.days, 0);
-  const html = `<tr><td>${maxDaysValue}</td><td>${plannedDaysValue}</td><td>${usedDays}</td></tr>`;
-  tbody.innerHTML = html;
-}
-
 function renderPeriodsTable(tbody, periods = []) {
   let html = '';
   if (periods.length === 0) {
-    html = '<tr><td colspan="2" style="text-align: center; color: #6b7280;">No periods added yet.</td></tr>';
+    html = '<tr><td colspan="3" style="text-align: center; color: #6b7280;">No periods added yet.</td></tr>';
   } else {
-    periods.forEach((period) => {
-      html += `<tr><td>${period.label}</td><td>${period.days}</td></tr>`;
+    periods.forEach((period, index) => {
+      const checked = period.isUsed ? 'checked' : '';
+      html += `<tr>
+        <td>${period.label}</td>
+        <td>${period.days}</td>
+        <td>
+          <input
+            type="checkbox"
+            class="planner-period-used"
+            data-index="${index}"
+            aria-label="Mark ${period.label} as used"
+            ${checked}
+          >
+        </td>
+      </tr>`;
     });
   }
   tbody.innerHTML = html;
@@ -70,6 +76,42 @@ function toISODate(date) {
   return `${y}-${m}-${d}`;
 }
 
+function isWorkingDay(date) {
+  const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+  return !isWeekend && !isBankHoliday(date);
+}
+
+function getSummaryDays(periods = [], maxDays = null) {
+  const usedDays = periods.reduce(
+    (sum, period) => (period.isUsed ? sum + period.days : sum),
+    0,
+  );
+  const plannedUpcomingDays = periods.reduce(
+    (sum, period) => (!period.isUsed ? sum + period.days : sum),
+    0,
+  );
+  const totalDays = Number.isInteger(maxDays) ? maxDays : usedDays + plannedUpcomingDays;
+  const remainingDays = Math.max(totalDays - usedDays, 0);
+
+  return {
+    usedDays,
+    plannedUpcomingDays,
+    remainingDays,
+    totalDays,
+  };
+}
+
+function renderTableBody(tbody, maxDays, periods = []) {
+  const summary = getSummaryDays(periods, maxDays);
+  const html = `<tr>
+    <td>${summary.usedDays}</td>
+    <td>${summary.plannedUpcomingDays}</td>
+    <td>${summary.remainingDays}</td>
+    <td>${summary.totalDays}</td>
+  </tr>`;
+  tbody.innerHTML = html;
+}
+
 function parseISODate(str) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec((str || '').trim());
   if (!match) return null;
@@ -90,9 +132,7 @@ function calcDaysBetween(start, end) {
   let count = 0;
   const current = new Date(start);
   while (current <= end) {
-    const isWeekend = current.getDay() === 0 || current.getDay() === 6;
-    const isBankHol = isBankHoliday(current);
-    if (!isWeekend && !isBankHol) {
+    if (isWorkingDay(current)) {
       count += 1;
     }
     current.setDate(current.getDate() + 1);
@@ -280,7 +320,6 @@ function initPeriodPicker(container) {
 export default function decorate(block) {
   let maxDays = null;
   let periods = [];
-  let usedDays = 0;
 
   const wrapper = createElement('div', {
     className: 'planner-wrapper',
@@ -301,9 +340,10 @@ export default function decorate(block) {
       <table class="planner-table">
         <thead>
           <tr>
-            <th scope="col">Max days</th>
-            <th scope="col">Planned days</th>
             <th scope="col">Used days</th>
+            <th scope="col">Planned/Upcoming days</th>
+            <th scope="col">Days left</th>
+            <th scope="col">Total days</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -313,6 +353,7 @@ export default function decorate(block) {
           <tr>
             <th scope="col">Date range</th>
             <th scope="col">Days</th>
+            <th scope="col">Used</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -359,7 +400,7 @@ export default function decorate(block) {
   }
 
   function updateTable() {
-    renderTableBody(tbody, maxDays, periods, usedDays);
+    renderTableBody(tbody, maxDays, periods);
     renderPeriodsTable(periodsTbody, periods);
   }
 
@@ -380,7 +421,7 @@ export default function decorate(block) {
 
     maxDays = parsed;
     updateTable();
-    setFeedback(feedback, 'Max holiday days added.');
+    setFeedback(feedback, 'Total holiday days updated.');
   });
 
   if (addPeriodButton) {
@@ -401,17 +442,32 @@ export default function decorate(block) {
         days,
         start,
         end,
+        isUsed: false,
       });
       periodTextInput.value = '';
       updateTable();
-      setFeedback(feedback, `Added ${days}-day period.`);
+      setFeedback(feedback, `Added ${days}-day period to planned days.`);
     });
   }
+
+  periodsTbody.addEventListener('change', (event) => {
+    const checkbox = event.target.closest('.planner-period-used');
+    if (!checkbox) return;
+
+    const index = Number(checkbox.dataset.index);
+    if (!Number.isInteger(index) || !periods[index]) return;
+
+    periods[index].isUsed = checkbox.checked;
+    updateTable();
+    const message = checkbox.checked
+      ? 'Period moved to used days.'
+      : 'Period moved back to planned days.';
+    setFeedback(feedback, message);
+  });
 
   clearButton.addEventListener('click', () => {
     maxDays = null;
     periods = [];
-    usedDays = 0;
     input.value = '';
     periodTextInput.value = '';
     setFeedback(feedback, 'Data cleared.');
