@@ -228,36 +228,27 @@
 	background: #f3f4f6;
 }
 
-.planner .planner-cal-day.in-range::after,
-.planner .planner-cal-day.is-preview::after {
-	background: rgb(55 65 81 / 20%);
-	bottom: 0;
+.planner .planner-cal-day:is(.in-range, .is-preview, .is-start, .is-end)::after {
 	content: '';
-	left: 0;
 	position: absolute;
-	right: 0;
-	top: 0;
+	inset: 0;
 	z-index: -1;
 }
 
-.planner .planner-cal-day.is-start::after,
-.planner .planner-cal-day.is-end::after {
-	background: rgb(37 99 235 / 25%);
-	border-radius: 50%;
-	bottom: 0;
-	content: '';
-	left: 0;
-	position: absolute;
-	right: 0;
-	top: 0;
-	z-index: -1;
+.planner .planner-cal-day:is(.in-range, .is-preview) {
+	background: rgb(55 65 81 / 20%);
 }
 
 .planner .planner-cal-day.is-start,
 .planner .planner-cal-day.is-end {
-	border: 2px solid #2563eb;
-	box-sizing: border-box;
-	font-weight: 700;
+  border: 2px solid #2563eb;
+  box-sizing: border-box;
+  font-weight: 700;
+
+  ::after {
+		background: rgb(37 99 235 / 25%);
+		border-radius: 50%;
+	}
 }
 
 
