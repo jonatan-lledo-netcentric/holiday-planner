@@ -1,5 +1,8 @@
 import { createElement } from '../../scripts/common.js';
 
+const PLANNER_STORAGE_KEY = 'holiday-planner-data';
+const PLANNER_STORAGE_VERSION = 1;
+
 function getMaxDays(value) {
   const trimmed = value.trim();
   const days = Number(trimmed);
@@ -11,24 +14,70 @@ function getMaxDays(value) {
   return days;
 }
 
+function reportInvalidPlannerData(message, details) {
+  console.error(message, details);
+}
+
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+function getOrdinalSuffix(day) {
+  if (day >= 11 && day <= 13) return 'th';
+  const remainder = day % 10;
+  if (remainder === 1) return 'st';
+  if (remainder === 2) return 'nd';
+  if (remainder === 3) return 'rd';
+  return 'th';
+}
+
+function formatDisplayDate(date) {
+  const month = MONTH_NAMES[date.getMonth()].slice(0, 3);
+  const day = date.getDate();
+  const year = date.getFullYear();
+  return `${month} ${day}${getOrdinalSuffix(day)} of ${year}`;
+}
+
+function formatRangeDisplay(label) {
+  const parts = label.split(' \u2013 ');
+  if (parts.length !== 2) return label;
+  const [startISO, endISO] = parts;
+  const start = new Date(`${startISO}T00:00:00`);
+  const end = new Date(`${endISO}T00:00:00`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return label;
+  return `${formatDisplayDate(start)} \u2013 ${formatDisplayDate(end)}`;
+}
+
 function renderPeriodsTable(tbody, periods = []) {
   let html = '';
   if (periods.length === 0) {
-    html = '<tr><td colspan="3" style="text-align: center; color: #6b7280;">No periods added yet.</td></tr>';
+    html = '<tr><td colspan="4" style="text-align: center; color: #6b7280;">No periods added yet.</td></tr>';
   } else {
     periods.forEach((period, index) => {
       const checked = period.isUsed ? 'checked' : '';
+      const displayLabel = formatRangeDisplay(period.label);
       html += `<tr>
-        <td>${period.label}</td>
+        <td>${displayLabel}</td>
         <td>${period.days}</td>
         <td>
           <input
             type="checkbox"
             class="planner-period-used"
             data-index="${index}"
-            aria-label="Mark ${period.label} as used"
+            aria-label="Mark ${displayLabel} as used"
             ${checked}
           >
+        </td>
+        <td>
+          <button
+            type="button"
+            class="planner-period-delete"
+            data-index="${index}"
+            aria-label="Delete ${displayLabel}"
+          >
+            Delete
+          </button>
         </td>
       </tr>`;
     });
@@ -43,10 +92,6 @@ function setFeedback(feedback, message, isError = false) {
 
 // ─── Calendar helpers ────────────────────────────────────────────────────────
 
-const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
 const DAY_ABBR = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
 // Spain/Barcelona bank holidays (month-day format)
@@ -63,9 +108,15 @@ const BANK_HOLIDAYS = [
   '12-25', // Christmas Day
 ];
 
-function isBankHoliday(date) {
+function isBankHoliday(date, manualHolidays = new Set()) {
+  const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
+  const iso = `${y}-${m}-${d}`;
+  if (manualHolidays.has(iso)) {
+    return true;
+  }
+
   return BANK_HOLIDAYS.includes(`${m}-${d}`);
 }
 
@@ -76,9 +127,9 @@ function toISODate(date) {
   return `${y}-${m}-${d}`;
 }
 
-function isWorkingDay(date) {
+function isWorkingDay(date, manualHolidays = new Set()) {
   const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-  return !isWeekend && !isBankHoliday(date);
+  return !isWeekend && !isBankHoliday(date, manualHolidays);
 }
 
 function getSummaryDays(periods = [], maxDays = null) {
@@ -128,11 +179,11 @@ function parseTextRange(value) {
   return start <= end ? [start, end] : [end, start];
 }
 
-function calcDaysBetween(start, end) {
+function calcDaysBetween(start, end, manualHolidays = new Set()) {
   let count = 0;
   const current = new Date(start);
   while (current <= end) {
-    if (isWorkingDay(current)) {
+    if (isWorkingDay(current, manualHolidays)) {
       count += 1;
     }
     current.setDate(current.getDate() + 1);
@@ -144,7 +195,199 @@ function formatRange(start, end) {
   return `${toISODate(start)} \u2013 ${toISODate(end)}`;
 }
 
-function renderCalGrid(grid, viewYear, viewMonth, rangeStart, rangeEnd, previewDate) {
+function createPeriod(start, end, isUsed = false, manualHolidays = new Set()) {
+  return {
+    label: formatRange(start, end),
+    days: calcDaysBetween(start, end, manualHolidays),
+    start,
+    end,
+    isUsed,
+  };
+}
+
+function serializePlannerState(maxDays, periods = [], manualHolidays = new Set()) {
+  const manualHolidayList = Array.from(manualHolidays).sort();
+
+  return {
+    version: PLANNER_STORAGE_VERSION,
+    maxDays,
+    manualHolidays: manualHolidayList,
+    holidays: {
+      manualHolidays: manualHolidayList,
+    },
+    periods: periods.map((period) => ({
+      label: period.label,
+      days: period.days,
+      start: toISODate(period.start),
+      end: toISODate(period.end),
+      isUsed: period.isUsed,
+    })),
+  };
+}
+
+function normalizeManualHolidayDates(values) {
+  if (!Array.isArray(values)) {
+    return null;
+  }
+
+  const normalized = values
+    .map((dateValue) => {
+      if (typeof dateValue !== 'string') {
+        return null;
+      }
+      const parsed = parseISODate(dateValue);
+      return parsed ? toISODate(parsed) : null;
+    })
+    .filter((dateValue) => !!dateValue);
+
+  if (normalized.length !== values.length) {
+    return null;
+  }
+
+  return normalized;
+}
+
+function validatePlannerState(data, { onError } = {}) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    reportInvalidPlannerData('The planner JSON is not compatible or is incorrect.', data);
+    onError?.('The planner JSON is not compatible or is incorrect.');
+    return null;
+  }
+
+  const {
+    maxDays,
+    periods,
+    version,
+    manualHolidays,
+    holidays,
+  } = data;
+  if (version !== PLANNER_STORAGE_VERSION) {
+    reportInvalidPlannerData('The planner JSON version is not supported.', data);
+    onError?.('The planner JSON version is not supported.');
+    return null;
+  }
+
+  const validMaxDays = maxDays === null || Number.isInteger(maxDays);
+  if (!validMaxDays || !Array.isArray(periods)) {
+    reportInvalidPlannerData('The planner JSON is missing required fields.', data);
+    onError?.('The planner JSON is missing required fields.');
+    return null;
+  }
+
+  const topLevelManualHolidays = manualHolidays ?? [];
+  const nestedManualHolidays = holidays?.manualHolidays ?? [];
+  const normalizedTopLevel = normalizeManualHolidayDates(topLevelManualHolidays);
+  const normalizedNested = normalizeManualHolidayDates(nestedManualHolidays);
+  if (!normalizedTopLevel || !normalizedNested) {
+    reportInvalidPlannerData('Manual holidays format is invalid.', manualHolidays);
+    onError?.('Manual holidays format is invalid.');
+    return null;
+  }
+
+  const manualHolidaySet = new Set([...normalizedTopLevel, ...normalizedNested]);
+
+  let invalidMessage = '';
+  let invalidDetails = null;
+  const normalizedPeriods = periods.map((period) => {
+    if (!period || typeof period !== 'object' || Array.isArray(period)) {
+      invalidMessage = 'Each planner period must be an object.';
+      invalidDetails = period;
+      return null;
+    }
+
+    const {
+      label,
+      days,
+      start,
+      end,
+      isUsed,
+    } = period;
+
+    const parsedStart = parseISODate(start);
+    const parsedEnd = parseISODate(end);
+    if (
+      typeof label !== 'string'
+      || !Number.isInteger(days)
+      || typeof isUsed !== 'boolean'
+      || !parsedStart
+      || !parsedEnd
+    ) {
+      invalidMessage = 'One of the planner periods has an invalid format.';
+      invalidDetails = period;
+      return null;
+    }
+
+    const normalizedPeriod = createPeriod(parsedStart, parsedEnd, isUsed, manualHolidaySet);
+    if (normalizedPeriod.label !== label || normalizedPeriod.days !== days) {
+      invalidMessage = 'One of the planner periods does not match the expected date range format.';
+      invalidDetails = period;
+      return null;
+    }
+
+    return normalizedPeriod;
+  });
+
+  if (invalidMessage || normalizedPeriods.some((period) => period === null)) {
+    reportInvalidPlannerData(invalidMessage, invalidDetails);
+    onError?.(invalidMessage);
+    return null;
+  }
+
+  return {
+    maxDays,
+    manualHolidays: manualHolidaySet,
+    periods: normalizedPeriods,
+  };
+}
+
+function loadPlannerState() {
+  const storedValue = window.localStorage.getItem(PLANNER_STORAGE_KEY);
+  if (!storedValue) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(storedValue);
+    return validatePlannerState(parsed);
+  } catch (error) {
+    reportInvalidPlannerData('The saved planner JSON could not be parsed.', error);
+    return null;
+  }
+}
+
+function savePlannerState(maxDays, periods = [], manualHolidays = new Set()) {
+  const serialized = serializePlannerState(maxDays, periods, manualHolidays);
+  window.localStorage.setItem(PLANNER_STORAGE_KEY, JSON.stringify(serialized, null, 2));
+}
+
+function clearSavedPlannerState() {
+  window.localStorage.removeItem(PLANNER_STORAGE_KEY);
+}
+
+function downloadPlannerState(maxDays, periods = [], manualHolidays = new Set()) {
+  const serialized = serializePlannerState(maxDays, periods, manualHolidays);
+  const blob = new Blob([JSON.stringify(serialized, null, 2)], {
+    type: 'application/json',
+  });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'holiday-planner-data.json';
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}
+
+function renderCalGrid(
+  grid,
+  viewYear,
+  viewMonth,
+  rangeStart,
+  rangeEnd,
+  previewDate,
+  manualHolidays = new Set(),
+) {
   const today = toISODate(new Date());
   const firstDay = new Date(viewYear, viewMonth, 1);
   const lastDate = new Date(viewYear, viewMonth + 1, 0).getDate();
@@ -177,7 +420,8 @@ function renderCalGrid(grid, viewYear, viewMonth, rangeStart, rangeEnd, previewD
     const isStart = iso === lo;
     const isEnd = hi !== null && iso === hi;
     const inRange = lo !== null && hi !== null && iso > lo && iso < hi;
-    const isBankHol = isBankHoliday(date);
+    const isBankHol = isBankHoliday(date, manualHolidays);
+    const isManualHoliday = manualHolidays.has(iso);
     const isWeekend = date.getDay() === 0 || date.getDay() === 6;
 
     const classes = ['planner-cal-day'];
@@ -186,6 +430,7 @@ function renderCalGrid(grid, viewYear, viewMonth, rangeStart, rangeEnd, previewD
     if (inRange) classes.push(isPreviewActive ? 'is-preview' : 'in-range');
     if (iso === today) classes.push('is-today');
     if (isBankHol) classes.push('is-bank-holiday');
+    if (isManualHoliday) classes.push('is-manual-holiday');
     if (isWeekend) classes.push('is-weekend');
 
     cells += `<button type="button" class="${classes.join(' ')}" data-date="${iso}" aria-label="${iso}">${d}</button>`;
@@ -194,15 +439,26 @@ function renderCalGrid(grid, viewYear, viewMonth, rangeStart, rangeEnd, previewD
   grid.innerHTML = heads + empties + cells;
 }
 
-function initPeriodPicker(container) {
+function initPeriodPicker(container, { getManualHolidays, onManualHolidaysChange } = {}) {
   const textInput = container.querySelector('.planner-period-text');
   const calendar = container.querySelector('.planner-calendar');
   const calLabel = container.querySelector('.planner-cal-label');
   const calGrid = container.querySelector('.planner-cal-grid');
   const prevBtn = container.querySelector('.planner-cal-prev');
   const nextBtn = container.querySelector('.planner-cal-next');
+  const manualModeInput = container.querySelector('.planner-manual-mode-input');
 
-  if (!textInput || !calendar || !calLabel || !calGrid || !prevBtn || !nextBtn) return;
+  if (
+    !textInput
+    || !calendar
+    || !calLabel
+    || !calGrid
+    || !prevBtn
+    || !nextBtn
+    || !manualModeInput
+  ) {
+    return null;
+  }
 
   const now = new Date();
   let viewYear = now.getFullYear();
@@ -211,6 +467,15 @@ function initPeriodPicker(container) {
   let rangeEnd = null;
   let previewDate = null;
   let selecting = 'start';
+  let isManualMode = manualModeInput.checked;
+
+  function currentManualHolidays() {
+    if (typeof getManualHolidays === 'function') {
+      return getManualHolidays();
+    }
+
+    return new Set();
+  }
 
   function updateTextInput() {
     if (rangeStart && rangeEnd) {
@@ -224,7 +489,15 @@ function initPeriodPicker(container) {
 
   function render() {
     calLabel.textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
-    renderCalGrid(calGrid, viewYear, viewMonth, rangeStart, rangeEnd, previewDate);
+    renderCalGrid(
+      calGrid,
+      viewYear,
+      viewMonth,
+      rangeStart,
+      rangeEnd,
+      previewDate,
+      currentManualHolidays(),
+    );
   }
 
   function resetSelection() {
@@ -275,6 +548,22 @@ function initPeriodPicker(container) {
     const date = parseISODate(btn.dataset.date);
     if (!date) return;
 
+    if (isManualMode) {
+      const iso = toISODate(date);
+      const nextManualHolidays = new Set(currentManualHolidays());
+      if (nextManualHolidays.has(iso)) {
+        nextManualHolidays.delete(iso);
+      } else {
+        nextManualHolidays.add(iso);
+      }
+
+      if (typeof onManualHolidaysChange === 'function') {
+        onManualHolidaysChange(nextManualHolidays);
+      }
+      render();
+      return;
+    }
+
     if (selecting === 'start') {
       rangeStart = date;
       rangeEnd = null;
@@ -291,6 +580,7 @@ function initPeriodPicker(container) {
   });
 
   calGrid.addEventListener('mouseover', (event) => {
+    if (isManualMode) return;
     if (selecting !== 'end') return;
     const btn = event.target.closest('[data-date]');
     const hoverIso = btn ? btn.dataset.date : null;
@@ -299,6 +589,7 @@ function initPeriodPicker(container) {
   });
 
   calGrid.addEventListener('mouseleave', () => {
+    if (isManualMode) return;
     if (selecting !== 'end') return;
     previewDate = null;
     applyPreview(null);
@@ -320,6 +611,13 @@ function initPeriodPicker(container) {
     render();
   });
 
+  manualModeInput.addEventListener('change', () => {
+    isManualMode = manualModeInput.checked;
+    selecting = 'start';
+    previewDate = null;
+    render();
+  });
+
   document.addEventListener('click', (event) => {
     const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
     const clickedInsideCalendar = path.length > 0
@@ -337,11 +635,17 @@ function initPeriodPicker(container) {
   });
 
   render();
+
+  return {
+    render,
+  };
 }
 
 export default function decorate(block) {
   let maxDays = null;
   let periods = [];
+  let manualHolidays = new Set();
+  let periodPickerApi = null;
 
   const wrapper = createElement('div', {
     className: 'planner-wrapper',
@@ -376,11 +680,47 @@ export default function decorate(block) {
             <th scope="col">Date range</th>
             <th scope="col">Days</th>
             <th scope="col">Used</th>
+            <th scope="col">Action</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
-      <button class="planner-clear" type="button">Clear all</button>
+      <div class="planner-actions">
+        <div class="planner-actions-menu-wrap">
+          <button
+            class="planner-actions-toggle"
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded="false"
+            aria-controls="planner-actions-menu"
+            aria-label="Open saved data actions"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          <div class="planner-actions-menu" id="planner-actions-menu" role="menu" hidden>
+            <button class="planner-save" type="button" role="menuitem">Save</button>
+            <button class="planner-export" type="button" role="menuitem">Export JSON</button>
+            <button class="planner-import" type="button" role="menuitem">Import JSON</button>
+            <button class="planner-clear-saved" type="button" role="menuitem">Clear saved data</button>
+          </div>
+        </div>
+        <button class="planner-clear" type="button">Clear all</button>
+        <input
+          type="file"
+          class="planner-import-input"
+          accept="application/json,.json"
+          hidden
+        >
+      </div>
+      <div class="planner-popup" hidden>
+        <div class="planner-popup-content" role="alertdialog" aria-modal="true" aria-labelledby="planner-popup-title">
+          <h3 class="planner-popup-title" id="planner-popup-title">Import error</h3>
+          <p class="planner-popup-message"></p>
+          <button class="planner-popup-close" type="button">Close</button>
+        </div>
+      </div>
       <section class="planner-period">
         <h3 class="planner-period-title">Add holiday period</h3>
         <label for="planner-period-text">Date range</label>
@@ -394,6 +734,10 @@ export default function decorate(block) {
           >
           <button type="button" class="planner-add-period">Add period</button>
         </div>
+        <label class="planner-manual-mode" for="planner-manual-mode">
+          <input type="checkbox" id="planner-manual-mode" class="planner-manual-mode-input">
+          Manual holidays mode
+        </label>
         <div class="planner-calendar">
           <div class="planner-calendar-nav">
             <button type="button" class="planner-cal-prev" aria-label="Previous month">&#8249;</button>
@@ -411,19 +755,100 @@ export default function decorate(block) {
   const feedback = wrapper.querySelector('#planner-feedback');
   const tbody = wrapper.querySelector('.planner-table tbody');
   const periodsTbody = wrapper.querySelector('.planner-periods-table tbody');
+  const popup = wrapper.querySelector('.planner-popup');
+  const popupMessage = wrapper.querySelector('.planner-popup-message');
+  const popupCloseButton = wrapper.querySelector('.planner-popup-close');
+  const actionsMenuWrap = wrapper.querySelector('.planner-actions-menu-wrap');
+  const actionsToggle = wrapper.querySelector('.planner-actions-toggle');
+  const actionsMenu = wrapper.querySelector('.planner-actions-menu');
+  const saveButton = wrapper.querySelector('.planner-save');
+  const exportButton = wrapper.querySelector('.planner-export');
+  const importButton = wrapper.querySelector('.planner-import');
+  const clearSavedButton = wrapper.querySelector('.planner-clear-saved');
   const clearButton = wrapper.querySelector('.planner-clear');
+  const importInput = wrapper.querySelector('.planner-import-input');
   const periodContainer = wrapper.querySelector('.planner-period');
   const periodTextInput = wrapper.querySelector('.planner-period-text');
   const addPeriodButton = wrapper.querySelector('.planner-add-period');
 
-  if (!form || !input || !feedback || !tbody || !clearButton || !periodsTbody) {
+  if (
+    !form
+    || !input
+    || !feedback
+    || !tbody
+    || !periodsTbody
+    || !popup
+    || !popupMessage
+    || !popupCloseButton
+    || !actionsMenuWrap
+    || !actionsToggle
+    || !actionsMenu
+    || !saveButton
+    || !exportButton
+    || !importButton
+    || !clearSavedButton
+    || !clearButton
+    || !importInput
+  ) {
     block.replaceChildren(wrapper);
     return;
+  }
+
+  function closePopup() {
+    popup.hidden = true;
+    popupMessage.textContent = '';
+  }
+
+  function openPopup(message) {
+    popupMessage.textContent = message;
+    popup.hidden = false;
+  }
+
+  function closeActionsMenu() {
+    actionsMenu.hidden = true;
+    actionsToggle.setAttribute('aria-expanded', 'false');
+  }
+
+  function openActionsMenu() {
+    actionsMenu.hidden = false;
+    actionsToggle.setAttribute('aria-expanded', 'true');
+  }
+
+  function toggleActionsMenu() {
+    if (actionsMenu.hidden) {
+      openActionsMenu();
+      return;
+    }
+
+    closeActionsMenu();
+  }
+
+  function syncInputs() {
+    input.value = maxDays === null ? '' : String(maxDays);
   }
 
   function updateTable() {
     renderTableBody(tbody, maxDays, periods);
     renderPeriodsTable(periodsTbody, periods);
+  }
+
+  function recalculatePeriods() {
+    periods = periods.map((period) => createPeriod(
+      period.start,
+      period.end,
+      period.isUsed,
+      manualHolidays,
+    ));
+    updateTable();
+  }
+
+  function applyPlannerState(nextMaxDays, nextPeriods, nextManualHolidays = new Set()) {
+    maxDays = nextMaxDays;
+    periods = nextPeriods;
+    manualHolidays = new Set(nextManualHolidays);
+    syncInputs();
+    updateTable();
+    periodPickerApi?.render();
   }
 
   input.addEventListener('input', () => {
@@ -456,24 +881,102 @@ export default function decorate(block) {
       }
 
       const [start, end] = parsed;
-      const days = calcDaysBetween(start, end);
-      const label = formatRange(start, end);
+      const period = createPeriod(start, end, false, manualHolidays);
 
-      periods.push({
-        label,
-        days,
-        start,
-        end,
-        isUsed: false,
-      });
+      periods.push(period);
       if (periodTextInput) {
         periodTextInput.value = '';
         periodTextInput.dispatchEvent(new Event('change'));
       }
       updateTable();
-      setFeedback(feedback, `Added ${days}-day period to planned days.`);
+      setFeedback(feedback, `Added ${period.days}-day period to planned days.`);
     });
   }
+
+  saveButton.addEventListener('click', () => {
+    savePlannerState(maxDays, periods, manualHolidays);
+    setFeedback(feedback, 'Planner data saved to local storage.');
+    closeActionsMenu();
+  });
+
+  exportButton.addEventListener('click', () => {
+    downloadPlannerState(maxDays, periods, manualHolidays);
+    setFeedback(feedback, 'Planner data exported as JSON.');
+    closeActionsMenu();
+  });
+
+  importButton.addEventListener('click', () => {
+    importInput.click();
+    closeActionsMenu();
+  });
+
+  clearSavedButton.addEventListener('click', () => {
+    clearSavedPlannerState();
+    setFeedback(feedback, 'Saved planner data removed from local storage.');
+    closeActionsMenu();
+  });
+
+  actionsToggle.addEventListener('click', toggleActionsMenu);
+
+  wrapper.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !actionsMenu.hidden) {
+      closeActionsMenu();
+      actionsToggle.focus();
+    }
+  });
+
+  document.addEventListener('click', (event) => {
+    if (actionsMenu.hidden) return;
+
+    const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+    const clickedInsideActions = path.length > 0
+      ? path.includes(actionsMenuWrap)
+      : actionsMenuWrap.contains(event.target);
+
+    if (!clickedInsideActions) {
+      closeActionsMenu();
+    }
+  });
+
+  popupCloseButton.addEventListener('click', closePopup);
+
+  popup.addEventListener('click', (event) => {
+    if (event.target === popup) {
+      closePopup();
+    }
+  });
+
+  importInput.addEventListener('change', async (event) => {
+    const [file] = event.target.files || [];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const validatedState = validatePlannerState(parsed, { onError: openPopup });
+      if (!validatedState) {
+        return;
+      }
+
+      closePopup();
+      applyPlannerState(
+        validatedState.maxDays,
+        validatedState.periods,
+        validatedState.manualHolidays,
+      );
+      savePlannerState(
+        validatedState.maxDays,
+        validatedState.periods,
+        validatedState.manualHolidays,
+      );
+      setFeedback(feedback, 'Planner data imported from JSON.');
+    } catch (error) {
+      reportInvalidPlannerData('The planner JSON is not compatible or is incorrect.', error);
+      openPopup('The planner JSON is not compatible or is incorrect.');
+    } finally {
+      importInput.value = '';
+    }
+  });
 
   periodsTbody.addEventListener('change', (event) => {
     const checkbox = event.target.closest('.planner-period-used');
@@ -490,19 +993,48 @@ export default function decorate(block) {
     setFeedback(feedback, message);
   });
 
+  periodsTbody.addEventListener('click', (event) => {
+    const deleteButton = event.target.closest('.planner-period-delete');
+    if (!deleteButton) return;
+
+    const index = Number(deleteButton.dataset.index);
+    if (!Number.isInteger(index) || !periods[index]) return;
+
+    periods.splice(index, 1);
+    updateTable();
+    setFeedback(feedback, 'Period deleted.');
+  });
+
   clearButton.addEventListener('click', () => {
     maxDays = null;
     periods = [];
-    input.value = '';
+    manualHolidays = new Set();
+    syncInputs();
     if (periodTextInput) {
       periodTextInput.value = '';
       periodTextInput.dispatchEvent(new Event('change'));
     }
     setFeedback(feedback, 'Data cleared.');
     updateTable();
+    periodPickerApi?.render();
   });
 
-  updateTable();
-  if (periodContainer) initPeriodPicker(periodContainer);
+  const savedState = loadPlannerState();
+  if (savedState) {
+    applyPlannerState(savedState.maxDays, savedState.periods, savedState.manualHolidays);
+    setFeedback(feedback, 'Loaded saved planner data from local storage.');
+  } else {
+    updateTable();
+  }
+
+  if (periodContainer) {
+    periodPickerApi = initPeriodPicker(periodContainer, {
+      getManualHolidays: () => manualHolidays,
+      onManualHolidaysChange: (nextManualHolidays) => {
+        manualHolidays = new Set(nextManualHolidays);
+        recalculatePeriods();
+      },
+    });
+  }
   block.replaceChildren(wrapper);
 }
