@@ -236,7 +236,7 @@
 }
 
 .planner .planner-cal-day:is(.in-range, .is-preview) {
-	background: rgb(55 65 81 / 20%);
+	background: rgb(37 99 235 / 16%);
 }
 
 .planner .planner-cal-day.is-start,
