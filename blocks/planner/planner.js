@@ -196,12 +196,13 @@ function renderCalGrid(grid, viewYear, viewMonth, rangeStart, rangeEnd, previewD
 
 function initPeriodPicker(container) {
   const textInput = container.querySelector('.planner-period-text');
+  const calendar = container.querySelector('.planner-calendar');
   const calLabel = container.querySelector('.planner-cal-label');
   const calGrid = container.querySelector('.planner-cal-grid');
   const prevBtn = container.querySelector('.planner-cal-prev');
   const nextBtn = container.querySelector('.planner-cal-next');
 
-  if (!textInput || !calLabel || !calGrid || !prevBtn || !nextBtn) return;
+  if (!textInput || !calendar || !calLabel || !calGrid || !prevBtn || !nextBtn) return;
 
   const now = new Date();
   let viewYear = now.getFullYear();
@@ -224,6 +225,15 @@ function initPeriodPicker(container) {
   function render() {
     calLabel.textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
     renderCalGrid(calGrid, viewYear, viewMonth, rangeStart, rangeEnd, previewDate);
+  }
+
+  function resetSelection() {
+    rangeStart = null;
+    rangeEnd = null;
+    previewDate = null;
+    selecting = 'start';
+    textInput.value = '';
+    render();
   }
 
   function applyPreview(hoverIso) {
@@ -297,11 +307,7 @@ function initPeriodPicker(container) {
   textInput.addEventListener('change', () => {
     const textValue = textInput.value.trim();
     if (!textValue) {
-      rangeStart = null;
-      rangeEnd = null;
-      previewDate = null;
-      selecting = 'start';
-      render();
+      resetSelection();
       return;
     }
 
@@ -312,6 +318,22 @@ function initPeriodPicker(container) {
     viewMonth = rangeStart.getMonth();
     selecting = 'start';
     render();
+  });
+
+  document.addEventListener('click', (event) => {
+    const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+    const clickedInsideCalendar = path.length > 0
+      ? path.includes(calendar)
+      : calendar.contains(event.target);
+
+    if (clickedInsideCalendar) return;
+
+    if (selecting === 'end') {
+      // Keep manual input untouched when clicking outside while ending a range.
+      selecting = 'start';
+      previewDate = null;
+      render();
+    }
   });
 
   render();
@@ -444,7 +466,10 @@ export default function decorate(block) {
         end,
         isUsed: false,
       });
-      periodTextInput.value = '';
+      if (periodTextInput) {
+        periodTextInput.value = '';
+        periodTextInput.dispatchEvent(new Event('change'));
+      }
       updateTable();
       setFeedback(feedback, `Added ${days}-day period to planned days.`);
     });
@@ -469,7 +494,10 @@ export default function decorate(block) {
     maxDays = null;
     periods = [];
     input.value = '';
-    periodTextInput.value = '';
+    if (periodTextInput) {
+      periodTextInput.value = '';
+      periodTextInput.dispatchEvent(new Event('change'));
+    }
     setFeedback(feedback, 'Data cleared.');
     updateTable();
   });
