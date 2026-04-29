@@ -142,11 +142,13 @@ function getSummaryDays(periods = [], maxDays = null) {
     0,
   );
   const totalDays = Number.isInteger(maxDays) ? maxDays : usedDays + plannedUpcomingDays;
+  const unplannedDays = Math.max(totalDays - usedDays - plannedUpcomingDays, 0);
   const remainingDays = Math.max(totalDays - usedDays, 0);
 
   return {
     usedDays,
     plannedUpcomingDays,
+    unplannedDays,
     remainingDays,
     totalDays,
   };
@@ -157,6 +159,7 @@ function renderTableBody(tbody, maxDays, periods = []) {
   const html = `<tr>
     <td>${summary.usedDays}</td>
     <td>${summary.plannedUpcomingDays}</td>
+    <td>${summary.unplannedDays}</td>
     <td>${summary.remainingDays}</td>
     <td>${summary.totalDays}</td>
   </tr>`;
@@ -668,6 +671,7 @@ export default function decorate(block) {
           <tr>
             <th scope="col">Used days</th>
             <th scope="col">Planned/Upcoming days</th>
+            <th scope="col">Unplanned days</th>
             <th scope="col">Days left</th>
             <th scope="col">Total days</th>
           </tr>
