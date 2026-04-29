@@ -11,6 +11,7 @@ import {
   loadSections,
   loadCSS,
 } from './aem.js';
+import { initializeTheme, listenForSystemThemeChanges } from './common.js';
 
 /**
  * Builds hero block and prepends to main in a new section.
@@ -132,6 +133,8 @@ export function decorateMain(main) {
  */
 async function loadEager(doc) {
   document.documentElement.lang = 'en';
+  initializeTheme();
+  listenForSystemThemeChanges();
   decorateTemplateAndTheme();
   const main = doc.querySelector('main');
   if (main) {

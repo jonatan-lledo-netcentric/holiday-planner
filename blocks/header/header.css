@@ -79,6 +79,16 @@ header nav .nav-hamburger button {
   white-space: initial;
 }
 
+:root[data-theme='dark'] header nav .nav-hamburger button {
+  background-color: var(--text-color) !important;
+  border-radius: 999px;
+  color: var(--background-color) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+}
+
 header nav .nav-hamburger-icon,
 header nav .nav-hamburger-icon::before,
 header nav .nav-hamburger-icon::after {
@@ -130,6 +140,12 @@ header nav[aria-expanded='true'] .nav-hamburger-icon::after {
   top: unset;
   bottom: 3px;
   transform: rotate(-45deg);
+}
+
+:root[data-theme='dark'] header nav .nav-hamburger .nav-hamburger-icon,
+:root[data-theme='dark'] header nav .nav-hamburger .nav-hamburger-icon::before,
+:root[data-theme='dark'] header nav .nav-hamburger .nav-hamburger-icon::after {
+  background: var(--background-color) !important;
 }
 
 @media (width >= 900px) {
@@ -269,4 +285,50 @@ header nav .nav-sections ul > li > ul > li {
 /* tools */
 header nav .nav-tools {
   grid-area: tools;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+header nav .nav-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  border: 1px solid var(--theme-toggle-border-color);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: var(--body-font-size-xs);
+  line-height: 1;
+  background: var(--theme-toggle-background-color);
+  color: var(--theme-toggle-text-color);
+  cursor: pointer;
+}
+
+header nav .nav-theme-toggle:hover,
+header nav .nav-theme-toggle:focus-visible {
+  background: var(--theme-toggle-hover-background-color);
+  text-decoration: none;
+}
+
+header nav .nav-theme-toggle-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid currentcolor;
+  position: relative;
+}
+
+header nav .nav-theme-toggle-icon::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: currentcolor;
+  opacity: 0;
+}
+
+header nav .nav-theme-toggle[aria-pressed='true'] .nav-theme-toggle-icon::after {
+  opacity: 1;
 }

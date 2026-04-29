@@ -129,3 +129,81 @@ export function createElement(tag, options = {}) {
 
   return element;
 }
+
+const THEME_STORAGE_KEY = 'holiday-planner-theme';
+const DARK_THEME_QUERY = '(prefers-color-scheme: dark)';
+
+/**
+ * Returns the saved theme preference.
+ * @returns {'light'|'dark'|null}
+ */
+export function getStoredTheme() {
+  try {
+    const theme = localStorage.getItem(THEME_STORAGE_KEY);
+    return theme === 'light' || theme === 'dark' ? theme : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Resolves the current system theme.
+ * @returns {'light'|'dark'}
+ */
+export function getSystemTheme() {
+  return window.matchMedia(DARK_THEME_QUERY).matches ? 'dark' : 'light';
+}
+
+/**
+ * Resolves the active theme from explicit preference or system default.
+ * @returns {'light'|'dark'}
+ */
+export function resolveTheme() {
+  return getStoredTheme() || getSystemTheme();
+}
+
+/**
+ * Applies a theme on the root element and emits a change event.
+ * @param {'light'|'dark'} theme The theme to apply
+ */
+export function applyTheme(theme) {
+  if (theme !== 'light' && theme !== 'dark') return;
+  document.documentElement.setAttribute('data-theme', theme);
+  window.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
+}
+
+/**
+ * Sets and persists an explicit theme preference.
+ * @param {'light'|'dark'} theme The theme preference to save
+ */
+export function setThemePreference(theme) {
+  if (theme !== 'light' && theme !== 'dark') return;
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch (e) {
+    // ignore storage failures and still apply theme
+  }
+  applyTheme(theme);
+}
+
+/**
+ * Applies the initial theme preference during page load.
+ * @returns {'light'|'dark'}
+ */
+export function initializeTheme() {
+  const theme = resolveTheme();
+  applyTheme(theme);
+  return theme;
+}
+
+/**
+ * Tracks system preference changes while no explicit choice is stored.
+ */
+export function listenForSystemThemeChanges() {
+  const media = window.matchMedia(DARK_THEME_QUERY);
+  media.addEventListener('change', (event) => {
+    if (!getStoredTheme()) {
+      applyTheme(event.matches ? 'dark' : 'light');
+    }
+  });
+}

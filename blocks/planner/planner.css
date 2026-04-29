@@ -103,12 +103,25 @@
 	background: #1e293b;
 }
 
+:root[data-theme='dark'] .planner .planner-actions-toggle {
+	background: #e2e8f0;
+	color: #0f172a;
+}
+
+:root[data-theme='dark'] .planner .planner-actions-toggle:hover {
+	background: #cbd5e1;
+}
+
 .planner .planner-actions-toggle span {
 	background: #fff;
 	border-radius: 2px;
 	display: block;
 	height: 2px;
 	width: 18px;
+}
+
+:root[data-theme='dark'] .planner .planner-actions-toggle span {
+	background: #0f172a;
 }
 
 .planner .planner-actions-menu {
@@ -125,6 +138,12 @@
 	position: absolute;
 	top: calc(100% + 8px);
 	z-index: 5;
+}
+
+:root[data-theme='dark'] .planner .planner-actions-menu {
+	background: #1e293b;
+	border-color: #475569;
+	box-shadow: 0 10px 24px rgb(2 6 23 / 45%);
 }
 
 .planner .planner-actions-menu[hidden] {
@@ -302,6 +321,10 @@
 .planner .planner-periods-table th {
 	background: #f5f7fa;
 	font-weight: 600;
+}
+
+:root[data-theme='dark'] .planner :is(.planner-table th, .planner-periods-table th) {
+	color: #0f172a;
 }
 
 @media (width >= 600px) {
@@ -502,6 +525,10 @@
 	z-index: 20;
 }
 
+:root[data-theme='dark'] .planner .planner-popup {
+	background: rgb(2 6 23 / 65%);
+}
+
 .planner .planner-popup[hidden] {
 	display: none;
 }
@@ -515,6 +542,13 @@
 	width: calc(100% - 32px);
 }
 
+:root[data-theme='dark'] .planner .planner-popup-content {
+	background: #1e293b;
+	border: 1px solid #475569;
+	box-shadow: 0 20px 40px rgb(2 6 23 / 45%);
+	color: #e2e8f0;
+}
+
 .planner .planner-popup-title {
 	font-size: 1rem;
 	margin: 0 0 8px;
@@ -523,6 +557,10 @@
 .planner .planner-popup-message {
 	color: #4a5562;
 	margin: 0 0 14px;
+}
+
+:root[data-theme='dark'] .planner .planner-popup-message {
+	color: #cbd5e1;
 }
 
 .planner .planner-popup-close {

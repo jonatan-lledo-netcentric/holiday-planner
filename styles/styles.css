@@ -11,6 +11,8 @@
  */
 
 :root {
+  color-scheme: light;
+
   /* colors */
   --background-color: white;
   --light-color: #f8f8f8;
@@ -18,6 +20,24 @@
   --text-color: #131313;
   --link-color: #3b63fb;
   --link-hover-color: #1d3ecf;
+  --hero-heading-color: #fff;
+
+  /* theme toggle */
+  --theme-toggle-background-color: transparent;
+  --theme-toggle-hover-background-color: var(--light-color);
+  --theme-toggle-border-color: #c9c9c9;
+  --theme-toggle-text-color: var(--text-color);
+
+  /* buttons */
+  --button-primary-background-color: var(--text-color);
+  --button-primary-hover-background-color: var(--dark-color);
+  --button-primary-text-color: #fff;
+  --button-secondary-border-color: var(--text-color);
+  --button-secondary-hover-background-color: var(--light-color);
+  --button-secondary-text-color: var(--text-color);
+  --button-accent-background-color: var(--link-color);
+  --button-accent-hover-background-color: var(--link-hover-color);
+  --button-accent-text-color: #fff;
 
   /* fonts */
   --body-font-family: roboto, roboto-fallback, sans-serif;
@@ -38,6 +58,31 @@
 
   /* nav height */
   --nav-height: 64px;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --background-color: #0f172a;
+  --light-color: #1e293b;
+  --dark-color: #334155;
+  --text-color: #e2e8f0;
+  --link-color: #7ab7ff;
+  --link-hover-color: #a8ceff;
+  --hero-heading-color: #f8fafc;
+  --theme-toggle-background-color: #1e293b;
+  --theme-toggle-hover-background-color: #334155;
+  --theme-toggle-border-color: #475569;
+  --theme-toggle-text-color: #e2e8f0;
+  --button-primary-background-color: #e2e8f0;
+  --button-primary-hover-background-color: #cbd5e1;
+  --button-primary-text-color: #0f172a;
+  --button-secondary-border-color: #cbd5e1;
+  --button-secondary-hover-background-color: #334155;
+  --button-secondary-text-color: #e2e8f0;
+  --button-accent-background-color: #2f81f7;
+  --button-accent-hover-background-color: #4f9bff;
+  --button-accent-text-color: #fff;
 }
 
 /* fallback fonts */
@@ -199,18 +244,18 @@ button.button:disabled {
 
 a.button.primary,
 button.button.primary {
-  border-color: var(--text-color);
-  background-color: var(--text-color);
-  color: var(--background-color);
+  border-color: var(--button-primary-background-color);
+  background-color: var(--button-primary-background-color);
+  color: var(--button-primary-text-color);
 }
 
 a.button.primary:hover,
 a.button.primary:focus-visible,
 button.button.primary:hover,
 button.button.primary:focus-visible {
-  border-color: var(--dark-color);
-  background-color: var(--dark-color);
-  color: var(--light-color);
+  border-color: var(--button-primary-hover-background-color);
+  background-color: var(--button-primary-hover-background-color);
+  color: var(--button-primary-text-color);
 }
 
 a.button.primary[aria-disabled="true"],
@@ -226,18 +271,18 @@ button.button.primary:disabled:focus-visible {
 
 a.button.secondary,
 button.button.secondary {
-  border-color: var(--text-color);
+  border-color: var(--button-secondary-border-color);
   background-color: transparent;
-  color: var(--text-color);
+  color: var(--button-secondary-text-color);
 }
 
 a.button.secondary:hover,
 a.button.secondary:focus-visible,
 button.button.secondary:hover,
 button.button.secondary:focus-visible {
-  border-color: var(--dark-color);
-  background-color: var(--light-color);
-  color: var(--dark-color);
+  border-color: var(--button-secondary-border-color);
+  background-color: var(--button-secondary-hover-background-color);
+  color: var(--button-secondary-text-color);
 }
 
 a.button.secondary[aria-disabled="true"],
@@ -254,17 +299,17 @@ button.button.secondary:disabled:focus-visible {
 /* high-impact call-to-action */
 a.button.accent,
 button.button.accent {
-  border-color: var(--link-color);
-  background-color: var(--link-color);
-  color: var(--background-color);
+  border-color: var(--button-accent-background-color);
+  background-color: var(--button-accent-background-color);
+  color: var(--button-accent-text-color);
 }
 
 a.button.accent:hover,
 a.button.accent:focus-visible,
 button.button.accent:hover,
 button.button.accent:focus-visible {
-  border-color: var(--link-hover-color);
-  background-color: var(--link-hover-color);
+  border-color: var(--button-accent-hover-background-color);
+  background-color: var(--button-accent-hover-background-color);
 }
 
 a.button.accent[aria-disabled="true"],

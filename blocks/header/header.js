@@ -1,7 +1,12 @@
 /* Boilerplate default block. */
 
 import { getMetadata } from '../../scripts/aem.js';
-import { createElement } from '../../scripts/common.js';
+import {
+  createElement,
+  getStoredTheme,
+  resolveTheme,
+  setThemePreference,
+} from '../../scripts/common.js';
 import { loadFragment } from '../fragment/fragment.js';
 
 // media query match that indicates mobile/tablet width
@@ -54,6 +59,49 @@ function openOnKeydown(e) {
 
 function focusNavSection() {
   document.activeElement.addEventListener('keydown', openOnKeydown);
+}
+
+/**
+ * Updates the theme toggle accessibility state.
+ * @param {HTMLButtonElement} button Theme toggle button
+ */
+function updateThemeButton(button) {
+  const currentTheme = document.documentElement.getAttribute('data-theme') || resolveTheme();
+  const isDark = currentTheme === 'dark';
+  button.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+  button.setAttribute('aria-label', `Switch to ${isDark ? 'light' : 'dark'} mode`);
+  const label = button.querySelector('.nav-theme-toggle-label');
+  if (label) label.textContent = isDark ? 'Dark' : 'Light';
+}
+
+/**
+ * Creates a light/dark theme toggle for the header.
+ * @returns {Element}
+ */
+function createThemeToggle() {
+  const themeToggle = createElement('button', {
+    className: 'nav-theme-toggle',
+    attributes: {
+      type: 'button',
+      'aria-pressed': 'false',
+      'aria-label': 'Switch to dark mode',
+      title: 'Toggle theme',
+    },
+    innerContent: '<span class="nav-theme-toggle-icon" aria-hidden="true"></span><span class="nav-theme-toggle-label">Light</span>',
+  });
+
+  themeToggle.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || resolveTheme();
+    const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setThemePreference(nextTheme);
+  });
+
+  window.addEventListener('themechange', () => updateThemeButton(themeToggle));
+  const initialTheme = getStoredTheme() || resolveTheme();
+  document.documentElement.setAttribute('data-theme', initialTheme);
+  updateThemeButton(themeToggle);
+
+  return themeToggle;
 }
 
 /**
@@ -152,6 +200,14 @@ export default async function decorate(block) {
       });
     });
   }
+
+  let navTools = nav.querySelector('.nav-tools');
+  if (!navTools) {
+    navTools = createElement('div', { className: 'nav-tools' });
+    nav.append(navTools);
+  }
+
+  navTools.append(createThemeToggle());
 
   // hamburger for mobile
   const hamburger = createElement('div', {
