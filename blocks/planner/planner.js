@@ -49,6 +49,15 @@ function formatRangeDisplay(label) {
   return `${formatDisplayDate(start)} \u2013 ${formatDisplayDate(end)}`;
 }
 
+function formatAriaDate(date) {
+  return date.toLocaleDateString('en-GB', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
 function renderPeriodsTable(tbody, periods = []) {
   let html = '';
   if (periods.length === 0) {
@@ -126,6 +135,12 @@ function toISODate(date) {
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
+}
+
+function addDays(date, amount) {
+  const nextDate = new Date(date);
+  nextDate.setDate(nextDate.getDate() + amount);
+  return nextDate;
 }
 
 function isWorkingDay(date, manualHolidays = new Set()) {
@@ -437,7 +452,8 @@ function renderCalGrid(
     if (isManualHoliday) classes.push('is-manual-holiday');
     if (isWeekend) classes.push('is-weekend');
 
-    cells += `<button type="button" class="${classes.join(' ')}" data-date="${iso}" aria-label="${iso}">${d}</button>`;
+    const ariaCurrent = iso === today ? ' aria-current="date"' : '';
+    cells += `<button type="button" class="${classes.join(' ')}" data-date="${iso}" aria-label="${formatAriaDate(date)}"${ariaCurrent}>${d}</button>`;
   }
 
   grid.innerHTML = heads + empties + cells;
@@ -504,6 +520,33 @@ function initPeriodPicker(container, { getManualHolidays, onManualHolidaysChange
     );
   }
 
+  function moveToMonth(monthDelta) {
+    let nextMonth = viewMonth + monthDelta;
+    let nextYear = viewYear;
+
+    while (nextMonth < 0) {
+      nextMonth += 12;
+      nextYear -= 1;
+    }
+
+    while (nextMonth > 11) {
+      nextMonth -= 12;
+      nextYear += 1;
+    }
+
+    viewYear = nextYear;
+    viewMonth = nextMonth;
+    render();
+  }
+
+  function focusDateButton(iso) {
+    if (!iso) return;
+    const button = calGrid.querySelector(`[data-date="${iso}"]`);
+    if (button instanceof HTMLButtonElement) {
+      button.focus();
+    }
+  }
+
   function resetSelection() {
     rangeStart = null;
     rangeEnd = null;
@@ -527,23 +570,11 @@ function initPeriodPicker(container, { getManualHolidays, onManualHolidaysChange
   }
 
   prevBtn.addEventListener('click', () => {
-    if (viewMonth === 0) {
-      viewYear -= 1;
-      viewMonth = 11;
-    } else {
-      viewMonth -= 1;
-    }
-    render();
+    moveToMonth(-1);
   });
 
   nextBtn.addEventListener('click', () => {
-    if (viewMonth === 11) {
-      viewYear += 1;
-      viewMonth = 0;
-    } else {
-      viewMonth += 1;
-    }
-    render();
+    moveToMonth(1);
   });
 
   calGrid.addEventListener('click', (event) => {
@@ -599,6 +630,63 @@ function initPeriodPicker(container, { getManualHolidays, onManualHolidaysChange
     applyPreview(null);
   });
 
+  calGrid.addEventListener('keydown', (event) => {
+    const dayButton = event.target.closest('[data-date]');
+    if (!dayButton) return;
+
+    const currentDate = parseISODate(dayButton.dataset.date);
+    if (!currentDate) return;
+
+    let nextDate = null;
+    if (event.key === 'ArrowLeft') nextDate = addDays(currentDate, -1);
+    if (event.key === 'ArrowRight') nextDate = addDays(currentDate, 1);
+    if (event.key === 'ArrowUp') nextDate = addDays(currentDate, -7);
+    if (event.key === 'ArrowDown') nextDate = addDays(currentDate, 7);
+
+    if (nextDate) {
+      event.preventDefault();
+      const nextIso = toISODate(nextDate);
+      const nextMonth = nextDate.getMonth();
+      const nextYear = nextDate.getFullYear();
+
+      if (nextMonth !== viewMonth || nextYear !== viewYear) {
+        viewMonth = nextMonth;
+        viewYear = nextYear;
+        render();
+      }
+
+      focusDateButton(nextIso);
+      return;
+    }
+
+    if (event.key === 'Home' || event.key === 'End') {
+      event.preventDefault();
+      const dayOfWeek = currentDate.getDay() === 0 ? 7 : currentDate.getDay();
+      const delta = event.key === 'Home' ? -(dayOfWeek - 1) : (7 - dayOfWeek);
+      const targetDate = addDays(currentDate, delta);
+
+      if (targetDate.getMonth() !== viewMonth || targetDate.getFullYear() !== viewYear) {
+        viewMonth = targetDate.getMonth();
+        viewYear = targetDate.getFullYear();
+        render();
+      }
+
+      focusDateButton(toISODate(targetDate));
+      return;
+    }
+
+    if (event.key === 'PageUp' || event.key === 'PageDown') {
+      event.preventDefault();
+      const shift = event.key === 'PageUp' ? -1 : 1;
+      moveToMonth(shift);
+
+      const targetDay = currentDate.getDate();
+      const lastDay = new Date(viewYear, viewMonth + 1, 0).getDate();
+      const targetDate = new Date(viewYear, viewMonth, Math.min(targetDay, lastDay));
+      focusDateButton(toISODate(targetDate));
+    }
+  });
+
   textInput.addEventListener('change', () => {
     const textValue = textInput.value.trim();
     if (!textValue) {
@@ -650,6 +738,7 @@ export default function decorate(block) {
   let periods = [];
   let manualHolidays = new Set();
   let periodPickerApi = null;
+  let popupReturnFocus = null;
 
   const wrapper = createElement('div', {
     className: 'planner-wrapper',
@@ -665,7 +754,7 @@ export default function decorate(block) {
           aria-describedby="planner-feedback"
         >
         <button type="submit">Add max days</button>
-        <p class="planner-feedback" id="planner-feedback" aria-live="polite"></p>
+        <p class="planner-feedback" id="planner-feedback" aria-live="polite" aria-atomic="true"></p>
       </form>
       <div class="planner-table-scroll">
         <table class="planner-table">
@@ -724,9 +813,9 @@ export default function decorate(block) {
         >
       </div>
       <div class="planner-popup" hidden>
-        <div class="planner-popup-content" role="alertdialog" aria-modal="true" aria-labelledby="planner-popup-title">
+        <div class="planner-popup-content" role="alertdialog" aria-modal="true" aria-labelledby="planner-popup-title" aria-describedby="planner-popup-message">
           <h3 class="planner-popup-title" id="planner-popup-title">Import error</h3>
-          <p class="planner-popup-message"></p>
+          <p class="planner-popup-message" id="planner-popup-message"></p>
           <button class="planner-popup-close" type="button">Close</button>
         </div>
       </div>
@@ -806,11 +895,19 @@ export default function decorate(block) {
   function closePopup() {
     popup.hidden = true;
     popupMessage.textContent = '';
+    if (popupReturnFocus instanceof HTMLElement) {
+      popupReturnFocus.focus();
+      popupReturnFocus = null;
+    }
   }
 
   function openPopup(message) {
+    popupReturnFocus = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
     popupMessage.textContent = message;
     popup.hidden = false;
+    popupCloseButton.focus();
   }
 
   function closeActionsMenu() {
@@ -821,6 +918,10 @@ export default function decorate(block) {
   function openActionsMenu() {
     actionsMenu.hidden = false;
     actionsToggle.setAttribute('aria-expanded', 'true');
+    const firstMenuItem = actionsMenu.querySelector('[role="menuitem"]');
+    if (firstMenuItem instanceof HTMLButtonElement) {
+      firstMenuItem.focus();
+    }
   }
 
   function toggleActionsMenu() {
@@ -927,7 +1028,51 @@ export default function decorate(block) {
 
   actionsToggle.addEventListener('click', toggleActionsMenu);
 
+  actionsToggle.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      if (actionsMenu.hidden) {
+        openActionsMenu();
+      }
+    }
+  });
+
+  actionsMenu.addEventListener('keydown', (event) => {
+    const menuItems = [...actionsMenu.querySelectorAll('[role="menuitem"]')];
+    if (menuItems.length === 0) return;
+
+    const currentIndex = menuItems.indexOf(document.activeElement);
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeActionsMenu();
+      actionsToggle.focus();
+      return;
+    }
+
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      const direction = event.key === 'ArrowDown' ? 1 : -1;
+      const nextIndex = currentIndex >= 0
+        ? (currentIndex + direction + menuItems.length) % menuItems.length
+        : 0;
+      menuItems[nextIndex].focus();
+      return;
+    }
+
+    if (event.key === 'Home' || event.key === 'End') {
+      event.preventDefault();
+      const targetIndex = event.key === 'Home' ? 0 : menuItems.length - 1;
+      menuItems[targetIndex].focus();
+    }
+  });
+
   wrapper.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !popup.hidden) {
+      closePopup();
+      return;
+    }
+
     if (event.key === 'Escape' && !actionsMenu.hidden) {
       closeActionsMenu();
       actionsToggle.focus();
