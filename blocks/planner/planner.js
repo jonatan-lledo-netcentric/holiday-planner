@@ -52,15 +52,15 @@ function formatRangeDisplay(label) {
 function renderPeriodsTable(tbody, periods = []) {
   let html = '';
   if (periods.length === 0) {
-    html = '<tr><td colspan="4" style="text-align: center; color: #6b7280;">No periods added yet.</td></tr>';
+    html = '<tr class="planner-periods-empty"><td colspan="4" style="text-align: center; color: #6b7280;">No periods added yet.</td></tr>';
   } else {
     periods.forEach((period, index) => {
       const checked = period.isUsed ? 'checked' : '';
       const displayLabel = formatRangeDisplay(period.label);
       html += `<tr>
-        <td>${displayLabel}</td>
-        <td>${period.days}</td>
-        <td>
+        <td data-label="Date range">${displayLabel}</td>
+        <td data-label="Days">${period.days}</td>
+        <td data-label="Used">
           <input
             type="checkbox"
             class="planner-period-used"
@@ -69,14 +69,15 @@ function renderPeriodsTable(tbody, periods = []) {
             ${checked}
           >
         </td>
-        <td>
+        <td data-label="Remove">
           <button
             type="button"
             class="planner-period-delete"
             data-index="${index}"
-            aria-label="Delete ${displayLabel}"
+            aria-label="Remove ${displayLabel}"
+            title="Remove"
           >
-            Delete
+            <img src="/icons/trash.svg" alt="" aria-hidden="true" width="16" height="16">
           </button>
         </td>
       </tr>`;
@@ -157,11 +158,11 @@ function getSummaryDays(periods = [], maxDays = null) {
 function renderTableBody(tbody, maxDays, periods = []) {
   const summary = getSummaryDays(periods, maxDays);
   const html = `<tr>
-    <td>${summary.usedDays}</td>
-    <td>${summary.plannedUpcomingDays}</td>
-    <td>${summary.unplannedDays}</td>
-    <td>${summary.remainingDays}</td>
-    <td>${summary.totalDays}</td>
+    <td data-label="Used days">${summary.usedDays}</td>
+    <td data-label="Planned/Upcoming days">${summary.plannedUpcomingDays}</td>
+    <td data-label="Unplanned days">${summary.unplannedDays}</td>
+    <td data-label="Days left">${summary.remainingDays}</td>
+    <td data-label="Total days">${summary.totalDays}</td>
   </tr>`;
   tbody.innerHTML = html;
 }
@@ -666,29 +667,33 @@ export default function decorate(block) {
         <button type="submit">Add max days</button>
         <p class="planner-feedback" id="planner-feedback" aria-live="polite"></p>
       </form>
-      <table class="planner-table">
-        <thead>
-          <tr>
-            <th scope="col">Used days</th>
-            <th scope="col">Planned/Upcoming days</th>
-            <th scope="col">Unplanned days</th>
-            <th scope="col">Days left</th>
-            <th scope="col">Total days</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <table class="planner-periods-table">
-        <thead>
-          <tr>
-            <th scope="col">Date range</th>
-            <th scope="col">Days</th>
-            <th scope="col">Used</th>
-            <th scope="col">Action</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div class="planner-table-scroll">
+        <table class="planner-table">
+          <thead>
+            <tr>
+              <th scope="col">Used days</th>
+              <th scope="col">Planned/Upcoming days</th>
+              <th scope="col">Unplanned days</th>
+              <th scope="col">Days left</th>
+              <th scope="col">Total days</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="planner-periods-table-scroll">
+        <table class="planner-periods-table">
+          <thead>
+            <tr>
+              <th scope="col">Date range</th>
+              <th scope="col">Days</th>
+              <th scope="col">Used</th>
+              <th scope="col">Remove</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
       <div class="planner-actions">
         <div class="planner-actions-menu-wrap">
           <button
