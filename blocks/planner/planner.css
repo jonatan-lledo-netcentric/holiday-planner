@@ -696,6 +696,11 @@
 	background: #f3f4f6;
 }
 
+:root[data-theme='dark'] .planner .planner-cal-day.is-weekend {
+	background: #334155;
+	color: #f8fafc;
+}
+
 .planner .planner-cal-day:is(.in-range, .is-preview, .is-start, .is-end)::after {
 	content: '';
 	position: absolute;
@@ -717,6 +722,10 @@
 		background: rgb(37 99 235 / 25%);
 		border-radius: 50%;
 	}
+}
+
+:root[data-theme='dark'] .planner .planner-cal-day:hover {
+	background: #475569;
 }
 
 
