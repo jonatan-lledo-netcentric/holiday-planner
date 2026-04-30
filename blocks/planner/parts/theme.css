@@ -1,0 +1,66 @@
+:root[data-theme='dark'] .planner {
+  .planner-actions-toggle {
+    --tool-button-background: #e2e8f0;
+    --tool-button-color: #0f172a;
+    --tool-button-hover-background: #cbd5e1;
+
+    span {
+      background: #0f172a;
+    }
+  }
+
+  .planner-actions-menu {
+    --tool-surface-background: #1e293b;
+    --tool-surface-border: #475569;
+    --tool-surface-shadow: 0 10px 24px rgb(2 6 23 / 45%);
+  }
+
+  :is(.planner-table, .planner-periods-table) {
+    --tool-table-head-color: #0f172a;
+    --tool-table-label-color: #e2e8f0;
+
+    color: #f8fafc;
+  }
+
+  .planner-periods-empty td {
+    color: #cbd5e1;
+  }
+
+  :is(.planner-manual-mode input, .planner-period-used) {
+    accent-color: #38bdf8;
+  }
+
+  .planner-feedback {
+    color: #e2e8f0;
+  }
+
+  .planner-popup {
+    background: rgb(2 6 23 / 65%);
+  }
+
+  .planner-popup-content {
+    --tool-surface-background: #1e293b;
+    --tool-surface-border: #475569;
+    --tool-surface-color: #e2e8f0;
+    --tool-surface-shadow: 0 20px 40px rgb(2 6 23 / 45%);
+  }
+
+  .planner-popup-message {
+    color: #cbd5e1;
+  }
+
+  :is(.planner-cal-prev, .planner-cal-next, .planner-cal-day) {
+    &:hover {
+      background: #475569;
+    }
+  }
+
+  .planner-cal-day.is-weekend {
+    background: #334155;
+    color: #f8fafc;
+  }
+
+  .planner-cal-head {
+    color: #cbd5e1;
+  }
+}

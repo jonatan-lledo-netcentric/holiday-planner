@@ -1,0 +1,89 @@
+.tool-responsive-table-scroll {
+	margin-bottom: var(--tool-table-scroll-margin, 12px);
+}
+
+.tool-responsive-table {
+	border-collapse: collapse;
+	width: 100%;
+
+	thead {
+		display: none;
+	}
+
+	tbody > tr:not(.tool-responsive-table-empty) {
+		border: 1px solid var(--tool-table-border, #dadde1);
+		border-radius: var(--tool-table-row-radius, 8px);
+		display: block;
+		margin-bottom: var(--tool-table-row-gap, 8px);
+		overflow: hidden;
+	}
+
+	td {
+		border: 0;
+		border-bottom: 1px solid var(--tool-table-divider, #f0f2f5);
+		display: flex;
+		font-size: var(--tool-table-cell-font-size-mobile, 0.9rem);
+		justify-content: space-between;
+		padding: var(--tool-table-cell-padding-mobile, 8px 12px);
+		text-align: var(--tool-table-cell-align-mobile, left);
+	}
+
+	tbody td[data-label]::before {
+		color: var(--tool-table-label-color, #4a5562);
+		content: attr(data-label);
+		font-weight: 600;
+		margin-right: 12px;
+		white-space: var(--tool-table-label-white-space, normal);
+	}
+
+	th {
+		background: var(--tool-table-head-background, #f5f7fa);
+		color: var(--tool-table-head-color, inherit);
+		font-weight: 600;
+	}
+	}
+
+.tool-responsive-table-empty td {
+	border: 1px solid var(--tool-table-border, #dadde1);
+	border-radius: var(--tool-table-row-radius, 8px);
+	display: block;
+}
+
+@media (width >= 600px) {
+	.tool-responsive-table-scroll {
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	.tool-responsive-table {
+		min-width: var(--tool-table-min-width, auto);
+
+		thead {
+			display: table-header-group;
+		}
+
+		tbody > tr:not(.tool-responsive-table-empty) {
+			border: 0;
+			border-radius: 0;
+			display: table-row;
+			margin-bottom: 0;
+		}
+
+		td {
+			border: 1px solid var(--tool-table-border, #dadde1);
+			display: table-cell;
+			font-size: var(--tool-table-cell-font-size-desktop, 1rem);
+			padding: var(--tool-table-cell-padding-desktop, 10px);
+			text-align: var(--tool-table-cell-align-desktop, center);
+		}
+
+		td[data-label]::before {
+			display: none;
+		}
+	}
+
+	.tool-responsive-table-empty td {
+		border-radius: 0;
+		display: table-cell;
+	}
+}

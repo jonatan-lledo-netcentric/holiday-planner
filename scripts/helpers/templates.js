@@ -34,6 +34,7 @@ export function getPlannerTemplate(content = {}) {
     <form class="planner-form">
       <label for="planner-max-days">${maxDaysLabel}</label>
       <input
+        class="tool-input"
         id="planner-max-days"
         name="planner-max-days"
         type="text"
@@ -41,11 +42,11 @@ export function getPlannerTemplate(content = {}) {
         placeholder="${maxDaysPlaceholder}"
         aria-describedby="planner-feedback"
       >
-      <button type="submit">${addMaxDaysButton}</button>
+      <button class="tool-pill-button" type="submit">${addMaxDaysButton}</button>
       <p class="planner-feedback" id="planner-feedback" aria-live="polite" aria-atomic="true"></p>
     </form>
-    <div class="planner-table-scroll">
-      <table class="planner-table">
+    <div class="planner-table-scroll tool-responsive-table-scroll">
+      <table class="planner-table tool-responsive-table">
         <thead>
           <tr>
             <th scope="col">${summaryHeadUsedDays}</th>
@@ -58,8 +59,8 @@ export function getPlannerTemplate(content = {}) {
         <tbody></tbody>
       </table>
     </div>
-    <div class="planner-periods-table-scroll">
-      <table class="planner-periods-table">
+    <div class="planner-periods-table-scroll tool-responsive-table-scroll">
+      <table class="planner-periods-table tool-responsive-table">
         <thead>
           <tr>
             <th scope="col">${periodsHeadDateRange}</th>
@@ -74,7 +75,7 @@ export function getPlannerTemplate(content = {}) {
     <div class="planner-actions">
       <div class="planner-actions-menu-wrap">
         <button
-          class="planner-actions-toggle"
+          class="planner-actions-toggle tool-pill-button"
           type="button"
           aria-haspopup="menu"
           aria-expanded="false"
@@ -85,14 +86,14 @@ export function getPlannerTemplate(content = {}) {
           <span></span>
           <span></span>
         </button>
-        <div class="planner-actions-menu" id="planner-actions-menu" role="menu" hidden>
-          <button class="planner-save" type="button" role="menuitem">${saveButtonLabel}</button>
-          <button class="planner-export" type="button" role="menuitem">${exportButtonLabel}</button>
-          <button class="planner-import" type="button" role="menuitem">${importButtonLabel}</button>
-          <button class="planner-clear-saved" type="button" role="menuitem">${clearSavedButtonLabel}</button>
+        <div class="planner-actions-menu tool-surface" id="planner-actions-menu" role="menu" hidden>
+          <button class="planner-save tool-pill-button" type="button" role="menuitem">${saveButtonLabel}</button>
+          <button class="planner-export tool-pill-button" type="button" role="menuitem">${exportButtonLabel}</button>
+          <button class="planner-import tool-pill-button" type="button" role="menuitem">${importButtonLabel}</button>
+          <button class="planner-clear-saved tool-pill-button" type="button" role="menuitem">${clearSavedButtonLabel}</button>
         </div>
       </div>
-      <button class="planner-clear" type="button">${clearAllButtonLabel}</button>
+      <button class="planner-clear tool-pill-button" type="button">${clearAllButtonLabel}</button>
       <input
         type="file"
         class="planner-import-input"
@@ -101,10 +102,10 @@ export function getPlannerTemplate(content = {}) {
       >
     </div>
     <div class="planner-popup" hidden>
-      <div class="planner-popup-content" role="alertdialog" aria-modal="true" aria-labelledby="planner-popup-title" aria-describedby="planner-popup-message">
+      <div class="planner-popup-content tool-surface" role="alertdialog" aria-modal="true" aria-labelledby="planner-popup-title" aria-describedby="planner-popup-message">
         <h3 class="planner-popup-title" id="planner-popup-title">${popupTitle}</h3>
         <p class="planner-popup-message" id="planner-popup-message"></p>
-        <button class="planner-popup-close" type="button">${popupCloseLabel}</button>
+        <button class="planner-popup-close tool-pill-button" type="button">${popupCloseLabel}</button>
       </div>
     </div>
     <section class="planner-period">
@@ -114,17 +115,17 @@ export function getPlannerTemplate(content = {}) {
         <input
           type="text"
           id="planner-period-text"
-          class="planner-period-text"
+          class="planner-period-text tool-input"
           placeholder="${periodPlaceholder}"
           autocomplete="off"
         >
-        <button type="button" class="planner-add-period">${addPeriodButtonLabel}</button>
+        <button type="button" class="planner-add-period tool-pill-button">${addPeriodButtonLabel}</button>
       </div>
       <label class="planner-manual-mode" for="planner-manual-mode">
         <input type="checkbox" id="planner-manual-mode" class="planner-manual-mode-input">
         ${manualHolidaysModeLabel}
       </label>
-      <div class="planner-calendar">
+      <div class="planner-calendar tool-surface">
         <div class="planner-calendar-nav">
           <button type="button" class="planner-cal-prev" aria-label="${prevMonthAriaLabel}">&#8249;</button>
           <span class="planner-cal-label"></span>
@@ -138,7 +139,7 @@ export function getPlannerTemplate(content = {}) {
 
 export function getPeriodsTableRowsTemplate(periods = [], { formatRangeLabel } = {}) {
   if (periods.length === 0) {
-    return '<tr class="planner-periods-empty"><td colspan="4" style="text-align: center; color: #6b7280;">No periods added yet.</td></tr>';
+    return '<tr class="planner-periods-empty tool-responsive-table-empty"><td colspan="4">No periods added yet.</td></tr>';
   }
 
   return periods.map((period, index) => {

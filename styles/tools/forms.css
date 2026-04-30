@@ -1,0 +1,45 @@
+.tool-focus-ring {
+	:is(button, input, select, textarea):focus-visible {
+		outline: 2px solid var(--tool-focus-ring-color, #cc6f74);
+		outline-offset: 2px;
+	}
+}
+
+.tool-input {
+	border: 1px solid var(--tool-input-border, #a8afb8);
+	border-radius: var(--tool-input-radius, 8px);
+	box-sizing: border-box;
+	font: inherit;
+	font-size: var(--tool-control-font-size, 1em);
+	padding: var(--tool-input-padding, 9px 10px);
+	width: var(--tool-input-width, 100%);
+}
+
+.tool-pill-button {
+	align-items: center;
+	background: var(--tool-button-background, #0a68ff);
+	border: 0;
+	border-radius: 999px;
+	color: var(--tool-button-color, #fff);
+	cursor: pointer;
+	display: inline-flex;
+	font: inherit;
+	font-size: var(--tool-control-font-size, 1em);
+	font-weight: 600;
+	gap: var(--tool-button-gap, 0);
+	justify-content: center;
+	min-height: var(--tool-button-min-height, auto);
+	padding: var(--tool-button-padding, 10px 14px);
+	white-space: var(--tool-button-white-space, normal);
+	width: var(--tool-button-width-mobile, 100%);
+
+	&:hover {
+		background: var(--tool-button-hover-background, var(--tool-button-background, #0a68ff));
+	}
+	}
+
+@media (width >= 600px) {
+	.tool-pill-button {
+		width: var(--tool-button-width-desktop, fit-content);
+	}
+}

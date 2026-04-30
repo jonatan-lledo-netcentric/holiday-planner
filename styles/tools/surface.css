@@ -1,0 +1,14 @@
+.tool-surface {
+	background: var(--tool-surface-background, transparent);
+	border: 1px solid var(--tool-surface-border, #dadde1);
+	border-radius: var(--tool-surface-radius, 12px);
+	box-shadow: var(--tool-surface-shadow, none);
+	color: var(--tool-surface-color, inherit);
+	padding: var(--tool-surface-padding, 12px);
+}
+
+@media (width >= 600px) {
+	.tool-surface {
+		padding: var(--tool-surface-padding-desktop, var(--tool-surface-padding, 12px));
+	}
+}

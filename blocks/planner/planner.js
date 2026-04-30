@@ -5,7 +5,7 @@ import { createElement } from '../../scripts/common.js';
 
 export default function decorate(block) {
   const wrapper = createElement('div', {
-    className: 'planner-wrapper',
+    className: 'planner-wrapper tool-surface tool-focus-ring',
     innerContent: getPlannerTemplate(),
   });
 

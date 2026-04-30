@@ -1,0 +1,125 @@
+.planner {
+  .planner-period {
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .planner-period-title {
+    font-size: 1rem;
+    margin: 0 0 12px;
+  }
+
+  .planner-period > label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .planner-period-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+
+    input {
+      box-sizing: border-box;
+      flex: 1;
+      font-size: 0.75em;
+      min-width: 0;
+    }
+  }
+
+  .planner-manual-mode {
+    align-items: center;
+    display: inline-flex;
+    font-size: 0.9rem;
+    font-weight: 600;
+    gap: 8px;
+    margin-bottom: 12px;
+
+    input {
+      accent-color: var(--planner-accent);
+    }
+  }
+
+  :is(.planner-add-period, .planner-popup-close) {
+    --tool-button-background: var(--planner-accent);
+    --tool-button-hover-background: var(--planner-accent-hover);
+  }
+
+  .planner-add-period {
+    --tool-control-font-size: 0.75em;
+    --tool-button-white-space: nowrap;
+  }
+
+  .planner-popup {
+    align-items: center;
+    background: rgb(15 23 42 / 45%);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    position: fixed;
+    z-index: 20;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  .planner-popup-content {
+    --tool-surface-background: #fff;
+    --tool-surface-padding: 18px;
+    --tool-surface-padding-desktop: 18px;
+    --tool-surface-radius: 14px;
+    --tool-surface-shadow: 0 20px 40px rgb(15 23 42 / 18%);
+
+    max-width: 320px;
+    width: calc(100% - 32px);
+  }
+
+  .planner-popup-title {
+    font-size: 1rem;
+    margin: 0 0 8px;
+  }
+
+  .planner-popup-message {
+    color: var(--planner-feedback-color);
+    margin: 0 0 14px;
+  }
+
+  .planner-popup-close {
+    --tool-button-width-mobile: fit-content;
+    --tool-button-width-desktop: fit-content;
+  }
+}
+
+@media (width >= 600px) {
+  .planner {
+    .planner-period-controls {
+      flex-direction: row;
+
+      input {
+        box-sizing: content-box;
+      }
+    }
+  }
+}
+
+@media (width >= 900px) {
+  .planner {
+    .planner-period {
+      margin-left: auto;
+      margin-right: auto;
+      max-width: 420px;
+    }
+
+    .planner-period-controls {
+      justify-content: center;
+
+      input {
+        flex: none;
+        width: min(300px, 100%);
+      }
+    }
+  }
+}

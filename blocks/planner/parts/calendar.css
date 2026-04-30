@@ -1,0 +1,129 @@
+.planner {
+  .planner-calendar {
+    --tool-surface-border: var(--planner-border);
+    --tool-surface-padding: 10px;
+    --tool-surface-padding-desktop: 10px;
+
+    box-sizing: border-box;
+    width: 100%;
+  }
+
+  .planner-calendar-nav {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .planner-cal-label {
+    font-weight: 600;
+  }
+
+  :is(.planner-cal-prev, .planner-cal-next) {
+    background: none;
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 2px 6px;
+
+    &:hover {
+      background: #f0f2f5;
+    }
+  }
+
+  .planner-cal-grid {
+    display: grid;
+    gap: 2px 0;
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  .planner-cal-head {
+    color: #6b7280;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 3px 0;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .planner-cal-day {
+    aspect-ratio: 1;
+    background: none;
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.75rem;
+    position: relative;
+    text-align: center;
+    width: 100%;
+    z-index: 0;
+
+    &:hover {
+      background: #f0f2f5;
+    }
+
+    &.is-today {
+      font-weight: 700;
+      text-decoration: underline;
+    }
+
+    &:is(.is-bank-holiday, .is-manual-holiday, .is-start, .is-end) {
+      box-sizing: border-box;
+    }
+
+    &:is(.is-bank-holiday, .is-manual-holiday) {
+      border: 2px solid #f59e0b;
+    }
+
+    &.is-weekend {
+      background: #f3f4f6;
+    }
+
+    &:is(.in-range, .is-preview, .is-start, .is-end)::after {
+      content: '';
+      inset: 0;
+      position: absolute;
+      z-index: -1;
+    }
+
+    &:is(.in-range, .is-preview) {
+      background: rgb(37 99 235 / 16%);
+    }
+
+    &:is(.is-start, .is-end) {
+      border: 2px solid #2563eb;
+      font-weight: 700;
+
+      &::after {
+        background: rgb(37 99 235 / 25%);
+        border-radius: 50%;
+      }
+    }
+  }
+}
+
+@media (width >= 600px) {
+  .planner {
+    .planner-calendar {
+      margin-left: auto;
+      margin-right: auto;
+      max-width: 320px;
+      width: auto;
+    }
+  }
+}
+
+@media (width >= 900px) {
+  .planner {
+    .planner-calendar {
+      box-sizing: border-box;
+      margin-left: 0;
+      margin-right: 0;
+      max-width: none;
+      width: 100%;
+    }
+  }
+}

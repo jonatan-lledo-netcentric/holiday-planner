@@ -1,0 +1,213 @@
+.planner {
+  --planner-accent: #0a68ff;
+  --planner-accent-hover: #0853cb;
+  --planner-border: #dadde1;
+  --planner-control-font-size: 0.75em;
+  --planner-feedback-color: #4a5562;
+  --planner-feedback-error: #cc6f74;
+  --planner-surface-shadow: 0 10px 24px rgb(15 23 42 / 15%);
+
+  :is(.tool-input, .tool-pill-button) {
+    --tool-control-font-size: var(--planner-control-font-size);
+  }
+
+  .planner-wrapper {
+    --tool-focus-ring-color: var(--planner-feedback-error);
+    --tool-surface-border: var(--planner-border);
+    --tool-surface-padding: 12px;
+    --tool-surface-padding-desktop: 16px;
+  }
+
+  .planner-form {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 14px;
+
+    label {
+      font-weight: 600;
+    }
+
+    button {
+      --tool-button-background: var(--planner-accent);
+      --tool-button-hover-background: var(--planner-accent-hover);
+    }
+  }
+
+  .planner-feedback {
+    color: var(--planner-feedback-color);
+    font-size: 0.95rem;
+    margin: 0;
+    min-height: 1.3em;
+
+    &.is-error {
+      color: var(--planner-feedback-error);
+    }
+  }
+
+  .planner-actions {
+    border-bottom: 1px solid var(--planner-border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+  }
+
+  .planner-actions-menu-wrap {
+    position: relative;
+  }
+
+  .planner-actions-toggle {
+    --tool-button-background: #0f172a;
+    --tool-button-hover-background: #1e293b;
+    --tool-button-min-height: 3.5rem;
+    --tool-button-padding: 10px;
+    --tool-button-width-mobile: 44px;
+    --tool-button-width-desktop: 44px;
+
+    flex-direction: column;
+    gap: 4px;
+
+    span {
+      background: #fff;
+      border-radius: 2px;
+      display: block;
+      height: 2px;
+      width: 18px;
+    }
+  }
+
+  .planner-actions-menu {
+    --tool-surface-background: #fff;
+    --tool-surface-border: var(--planner-border);
+    --tool-surface-padding: 8px;
+    --tool-surface-padding-desktop: 8px;
+    --tool-surface-radius: 10px;
+    --tool-surface-shadow: var(--planner-surface-shadow);
+
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    left: 0;
+    min-width: 170px;
+    position: absolute;
+    top: calc(100% + 8px);
+    z-index: 5;
+
+    &[hidden] {
+      display: none;
+    }
+
+    .tool-pill-button {
+      --tool-button-width-desktop: 100%;
+    }
+  }
+
+  :is(.planner-import, .planner-clear) {
+    --tool-button-background: var(--planner-accent);
+    --tool-button-hover-background: var(--planner-accent-hover);
+  }
+
+  .planner-clear {
+    --tool-button-width-mobile: fit-content;
+    --tool-button-width-desktop: fit-content;
+  }
+
+  .planner-save {
+    --tool-button-background: #2f8f5b;
+    --tool-button-hover-background: #26764b;
+  }
+
+  .planner-export {
+    --tool-button-background: #156f8a;
+    --tool-button-hover-background: #115a70;
+  }
+
+  .planner-clear-saved {
+    --tool-button-background: #8a5b15;
+    --tool-button-hover-background: #704b11;
+  }
+
+  .planner-table-scroll {
+    --tool-table-scroll-margin: 12px;
+  }
+
+  .planner-periods-table-scroll {
+    --tool-table-scroll-margin: 20px;
+  }
+
+  :is(.planner-table, .planner-periods-table) {
+    --tool-table-border: var(--planner-border);
+    --tool-table-head-background: #f5f7fa;
+  }
+
+  .planner-table {
+    --tool-table-cell-align-desktop: center;
+    --tool-table-cell-font-size-mobile: 0.9rem;
+    --tool-table-min-width: 400px;
+    --tool-table-row-gap: 4px;
+  }
+
+  .planner-periods-table {
+    --tool-table-cell-align-desktop: left;
+    --tool-table-cell-font-size-mobile: 0.85rem;
+    --tool-table-label-white-space: nowrap;
+    --tool-table-min-width: 380px;
+    --tool-table-row-gap: 8px;
+  }
+
+  .planner-periods-empty td {
+    color: #6b7280;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .planner-period-delete {
+    align-items: center;
+    background: #fff1f2;
+    border: 0;
+    border-radius: 50%;
+    color: var(--planner-feedback-error);
+    cursor: pointer;
+    display: inline-flex;
+    height: 32px;
+    justify-content: center;
+    padding: 0;
+    position: relative;
+    width: 32px;
+
+    &:hover {
+      background: #fce4e6;
+    }
+
+    :is(img, svg) {
+      display: block;
+      flex-shrink: 0;
+    }
+  }
+}
+
+@media (width >= 600px) {
+  .planner {
+    --planner-control-font-size: 0.9em;
+
+    .planner-form {
+      align-items: end;
+      grid-template-columns: 1fr auto;
+
+      :is(label, .planner-feedback) {
+        grid-column: 1 / -1;
+      }
+    }
+
+    :is(.planner-periods-table td:nth-child(2), .planner-periods-table td:nth-child(3), .planner-periods-table td:nth-child(4)) {
+      text-align: center;
+    }
+  }
+}
+
+@media (width >= 900px) {
+  .planner {
+    --planner-control-font-size: 1em;
+  }
+}
