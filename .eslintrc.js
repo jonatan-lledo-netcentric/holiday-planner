@@ -1,6 +1,16 @@
 module.exports = {
   root: true,
   extends: 'airbnb-base',
+  settings: {
+    'import/resolver': {
+      alias: {
+        map: [
+          ['@helper', './scripts/helpers'],
+        ],
+        extensions: ['.js'],
+      },
+    },
+  },
   env: {
     browser: true,
   },
