@@ -1,5 +1,5 @@
-# Your Project's Title...
-Your project's description...
+# Holiday Planner
+A simple tool to control the holiday amount to plann the days off and control the amount of none-used ones
 
 ## Environments
 - Preview: https://main--{repo}--{owner}.aem.page/
